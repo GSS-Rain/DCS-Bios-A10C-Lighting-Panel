@@ -1,6 +1,12 @@
 /*  
+ *   Joe Sim channel Youtube video demo
+ *   https://youtu.be/_JBi8B30JSk
  *   Lighting Control Panel
  *   DCS BIOS version 0.7.1
+ *   I updated code to include turn relay off commands.
+ *   In the video, the code turned on relays depending if the switch is on, however it needed to
+ *   include turn off relay statements just in case it was on previously.  Thats why in  the video the real
+ *   panels were lit until all three switches went off.
  */
 
 #define DCSBIOS_IRQ_SERIAL
@@ -71,6 +77,7 @@ DcsBios::Potentiometer lcpConsole("LCP_CONSOLE", A2);
 // I modified the Thrustmaster Warthog HOTAS.
 // LASTE Panel Lighting is now brought out on its own connector. Two wires labeled Laste dimming. Just LEDs and 220 ohm current limiting resisor.
 // Throttle Panel Lighting is now brought out on its own connector. Two wires labeled Throttle dimming. Just LEDs and 220 ohm current limiting resisor.
+// Thustmaster is 5V dimming but I have 12V dimming bus, so using an on/off Digital Out for lighting until I make a 5V dimming circuit.
 
 // Aux Instrument Lights (LASTE Panel Brightness depends on Aux Instr Light knob position)
 void onLcpAuxInstChange(unsigned int AuxPot_newValue) {
