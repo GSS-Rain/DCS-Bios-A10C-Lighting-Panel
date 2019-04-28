@@ -17,17 +17,17 @@ int THROTTLE_LIGHT = A0;       // Thrustmaster HOTAS LED chain (5V)
 unsigned int LASTE_Brightness;
 unsigned int THROTTLE_Brightness;
 
-// We need to monitor the Electrical Panel to see the state of the Power switches
+// We need to monitor the Electrical Panel to see the state of the Power Bus switches
 DcsBios::IntegerBuffer eppBatteryPwrBuffer(0x1110, 0x0002, 1, NULL); // Battery Sw
 DcsBios::IntegerBuffer eppAcGenPwrLBuffer(0x110c, 0x8000, 15, NULL); // AC Gen L Sw
 DcsBios::IntegerBuffer eppAcGenPwrRBuffer(0x1110, 0x0001, 0, NULL);  // AC Gen R Sw
 DcsBios::IntegerBuffer eppApuGenPwrBuffer(0x110c, 0x1000, 12, NULL); // APU Gen Pwr Sw
 DcsBios::IntegerBuffer eppInverterBuffer(0x110c, 0x6000, 13, NULL);  // Inverter Sw
 
-// We need to monitor the Engine Instrument Panel to see who is able to provide elec pwr
+// We need to monitor the Engine Instrument Panel to see who is able to provide electrical power to the busses
 DcsBios::IntegerBuffer apuRpmBuffer(0x10be, 0xffff, 0, NULL);   // APU rpm
-DcsBios::IntegerBuffer lEngCoreBuffer(0x10a8, 0xffff, 0, NULL); // Left ENG Core Speed
-DcsBios::IntegerBuffer rEngCoreBuffer(0x10ac, 0xffff, 0, NULL); // Right ENG Core Speed
+DcsBios::IntegerBuffer lEngCoreBuffer(0x10a8, 0xffff, 0, NULL); // Left Engine Core Speed
+DcsBios::IntegerBuffer rEngCoreBuffer(0x10ac, 0xffff, 0, NULL); // Right Engine Core Speed
 
 // Position Lights FLASH/OFF/STEADY
 DcsBios::Switch3Pos lcpPosition("LCP_POSITION", 2, 3);
@@ -125,10 +125,11 @@ void setup() {
 void loop() {
   DcsBios::loop();
   
-// The three switches are Baettery On/Off, LH Gen On/Off, and RH Gen On/Off.
+// The switches are Baettery On/Off, LH Gen On/Off, RH Gen On/Off, and APU Gen Pwr On/Off.
 // If the switches have changed, see if any are in the ON position.
 // If any of the switches are On, then the appropriate lighting bus is on, else lighting bus is off. 
-
+// Flood Light is not really modeled.  We will add that code later when we install a real flood light.
+    
 // 5V Omron solid state relays 240V/2A, output with resistive fuse 240V/2A.
 // (0-2.5V low state relays ON)
 // (3-5V state high relay OFF)
@@ -136,9 +137,9 @@ void loop() {
 
   if (eppBatteryPwrBuffer.hasUpdatedData() || eppAcGenPwrLBuffer.hasUpdatedData() || eppAcGenPwrRBuffer.hasUpdatedData() || eppApuGenPwrBuffer.hasUpdatedData() || eppInverterBuffer.hasUpdatedData() || apuRpmBuffer.hasUpdatedData())  {
         
-    if (eppAcGenPwrLBuffer.getData() == 1 && lEngCoreBuffer.getData() > 30000) 
+    if (eppAcGenPwrLBuffer.getData() == 1 && lEngCoreBuffer.getData() > 32000) 
     {
-   // Left Gen is On, and Left Engine is running so turn on listed relays and HOTAS LEDs
+   // Left Gen Pwr Switch is On, and Left Engine is running so turn on listed relays and HOTAS LEDs
       digitalWrite(LIGHT_BUS_CONSOLE, LOW);    // On
       digitalWrite(LIGHT_BUS_AUX_INST, LOW);   // On
       digitalWrite(LIGHT_BUS_FLOOD_LITE, LOW); // On
@@ -164,9 +165,9 @@ void loop() {
         digitalWrite(THROTTLE_LIGHT, HIGH); 
       }
     }
-    else if (eppAcGenPwrRBuffer.getData() == 1 && rEngCoreBuffer.getData() > 30000) 
+    else if (eppAcGenPwrRBuffer.getData() == 1 && rEngCoreBuffer.getData() > 32000) 
     {
-   // Right Gen is On, and right Engine is running so turn on all relays and HOTAS LEDs
+   // Right Gen Pwr Switch is On, and right Engine is running so turn on all relays and HOTAS LEDs
       digitalWrite(LIGHT_BUS_CONSOLE, LOW);    // On
       digitalWrite(LIGHT_BUS_AUX_INST, LOW);   // On
       digitalWrite(LIGHT_BUS_FLOOD_LITE, LOW); // On
@@ -194,7 +195,7 @@ void loop() {
     }
     else if (eppApuGenPwrBuffer.getData() == 1 && apuRpmBuffer.getData() > 50000)
     {
-   // APU Gen is On and APU RPM is above 90%, so turn on Console and Aux Instruments relays
+   // APU Gen Pwr Switch is On and APU RPM is above 90%, so turn on Console and Aux Instruments relays
       digitalWrite(LIGHT_BUS_CONSOLE, LOW);   // On 
       digitalWrite(LIGHT_BUS_AUX_INST, LOW);  // On
    
@@ -220,7 +221,7 @@ void loop() {
     }    
     else if (eppBatteryPwrBuffer.getData() == 1 && eppInverterBuffer.getData() == 2)
     {
-   // Battery is On and Inverter is On, so only turn on listed relays
+   // Battery is On and Inverter is On, so only turn on Eng Instruments, Flight Instruments, and Flood Light relays
       digitalWrite(LIGHT_BUS_CONSOLE, HIGH);   // Off 
       digitalWrite(LIGHT_BUS_AUX_INST, HIGH);  // Off 
       digitalWrite(LIGHT_BUS_ENG_INST, LOW);   // On
