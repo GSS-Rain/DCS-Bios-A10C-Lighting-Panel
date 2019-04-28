@@ -1,6 +1,11 @@
 /*  
  *   Lighting Control Panel
+ *
+ *   DCS World Version 2.5.4.xxxx
  *   DCS BIOS version 0.7.1
+ *   GSS Rain in the DCS Forums
+ *   Joe Sim on Youtube
+ *   https://youtu.be/EGqNWMJZ_dk
  */
 
 #define DCSBIOS_IRQ_SERIAL
